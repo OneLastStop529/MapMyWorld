@@ -1,3 +1,8 @@
+#include <iostream>
+#include <algorithm>
+#include <vector>
+
+
 #include "ros/ros.h"
 #include "ball_chaser/DriveToTarget.h"
 #include <sensor_msgs/Image.h>
@@ -9,11 +14,12 @@ ros::ServiceClient client;
 void drive_robot(float lin_x, float ang_z)
 {
     // TODO: Request a service and pass the velocities to it to drive the robot
-  	ROS_INFO_STREAM("Driving to the target.");
-  	ball_chaser::DriveToTarget srv;
+    ROS_INFO_STREAM("Driving to the target.");
+    ball_chaser::DriveToTarget srv;
     srv.request.linear_x = lin_x;
     srv.request.angular_z = ang_z;
-  
+  	
+  	client.call(srv);
   	
 }
 
@@ -29,27 +35,44 @@ void process_image_callback(const sensor_msgs::Image img)
     // Request a stop when there's no white ball seen by the camera
 
     int white_pixel_count = 0;
-    float offset_accumulated = 0.0;
-
+    int left_counter = 0;
+    int mid_counter = 0;
+    int right_counter = 0;
     int height = img.height;
     int step = img.step;
 
-    for (int i = 0; i < height; i++) {
-        for (int j = 0; j < step; j++) {
-            if (img.data[i*step + j] == white_pixel) {
-                // determine the location of the white pixel
-                // step / 2 = the middle of the view  
-                offset_accumulated += j - step / 2;
-                white_pixel_count++;
+    for (int i = 0; i < height*step; i+=3) {
+        int position_index = i % (img.width * 3) / 3;
+	    if (img.data[i] == white_pixel && img.data[i+1] == white_pixel && img.data[i+2] == white_pixel){
+            if(position_index <= 265) {
+		        left_counter += 1;                
             }
-        }
-    } 
-    if (white_pixel_count == 0) {
-        drive_robot(0,0);
-    } else {
-        float normalized_result = offset_accumulated / white_pixel_count / (step / 2);
-        drive_robot(0.1, -2 * normalized_result);
+            if(position_index > 265 && position_index <= 533) {
+		        mid_counter += 1;               
+            }
+            if(position_index > 533) {
+		        right_counter += 1;                
+            }
+        }	
     }
+  
+  
+  	std::vector<int> position_counter{left_counter, mid_counter, right_counter};
+    int where_to_move = *max_element(position_counter.begin(), position_counter.end());
+  
+  if (where_to_move == 0){
+        drive_robot(0.0, 0.0); 
+    }
+    else if (where_to_move == left_counter) {
+		drive_robot(0.0, 0.5);  
+    }
+    else if (where_to_move == mid_counter) {
+        drive_robot(0.5, 0.0);  
+    }
+    else if (where_to_move == right_counter) {
+        drive_robot(0.0, -0.5); 
+    }
+   
 }
 
 int main(int argc, char** argv)
