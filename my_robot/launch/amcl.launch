@@ -10,17 +10,36 @@
          <param name="odom_model_type" value="diff-corrected"/>
          <param name="base_frame_id" value="robot_footprint"/>
          <param name="global_frame_id" value="map"/>
-         <param name="transform_tolerance" value="0.75"/>
+         <param name="transform_tolerance" value="2.00"/>
         
         <!-- If you choose to define initial pose here -->
     	<param name="initial_pose_x" value="0"/>
     	<param name="initial_pose_y" value="0"/>
         <!-- <param name="initial_pose_a" value="0"/> -->
+
+        <!-- Particles -->
+        <param name="min_particles" value="50"/>
+        <param name="max_particles" value="200"/>
+        <param name="update_min_a" value="0.1"/>
+        <param name="update_min_d" value="0.1"/>
+
+        <!-- Laser -->
+        <param name="laser_min_range" value=".04"/>
+        <param name="laser_max_range" value="10"/>
+        <param name="laser_max_beams" value="25"/>
+        <param name="laser_z_hit" value="0.90"/>
+        <param name="laser_z_rand" value="0.05"/>
+        <!-- Odometry -->
+        <param name="odom_model_type" value="diff-corrected"/>
+        <param name="odom_alpha1" value="0.3"/>
+        <param name="odom_alpha2" value="0.3"/>
+        <param name="odom_alpha3" value="0.3"/>
+        <param name="odom_alpha4" value="0.3"/>
     </node>
 
     <!--Move Base-->
     <node name="move_base" pkg="move_base" type="move_base" respawn="false" output="screen">
-        <!-- <remap from="scan" to="my_robot/laser/scan"/> -->
+        <remap from="scan" to="my_robot/laser/scan"/>
         <param name="base_global_planner" value="navfn/NavfnROS"/>
         <param name="base_local_planner" value="base_local_planner/TrajectoryPlannerROS"/>
         
